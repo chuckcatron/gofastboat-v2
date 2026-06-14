@@ -2,6 +2,12 @@
 
 # dependencies
 /node_modules
+
+# TEMPORARY: the local dev npm mirror is inconsistent and produces a poisoned
+# lockfile (see AB#1235). Ignored until a clean package-lock.json is generated
+# against the real registry (first Vercel/CI install), after which it should be
+# committed and CI switched to `npm ci`.
+/package-lock.json
 /.pnp
 .pnp.*
 .yarn/*
