@@ -43,6 +43,12 @@ yarn-error.log*
 # convex generated code
 convex/_generated/
 
+# clerk CLI / skills tooling (not app code)
+.agents/
+.claude/
+.vscode/
+skills-lock.json
+
 # vercel
 .vercel
 
