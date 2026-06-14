@@ -89,6 +89,15 @@ describe("boats — slug generation", () => {
     expect(second).not.toBeNull();
   });
 
+  test("updateBoat throws when the boat no longer exists", async () => {
+    const t = convexTest(schema, modules).withIdentity(ADMIN);
+    const id = await t.mutation(api.boats.createBoat, boatArgs());
+    await t.mutation(api.boats.deleteBoat, { id });
+    await expect(
+      t.mutation(api.boats.updateBoat, { id, title: "Ghost" }),
+    ).rejects.toThrow("Boat not found");
+  });
+
   test("re-slugs on a title-changing update, excluding itself", async () => {
     const t = convexTest(schema, modules).withIdentity(ADMIN);
     const id = await t.mutation(api.boats.createBoat, boatArgs());

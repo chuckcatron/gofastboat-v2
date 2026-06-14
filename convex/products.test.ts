@@ -64,6 +64,15 @@ describe("products — slug generation", () => {
     expect(second).not.toBeNull();
   });
 
+  test("updateProduct throws when the product no longer exists", async () => {
+    const t = convexTest(schema, modules).withIdentity(ADMIN);
+    const id = await t.mutation(api.products.createProduct, productArgs());
+    await t.mutation(api.products.deleteProduct, { id });
+    await expect(
+      t.mutation(api.products.updateProduct, { id, title: "Ghost" }),
+    ).rejects.toThrow("Product not found");
+  });
+
   test("re-slugs on a title-changing update", async () => {
     const t = convexTest(schema, modules).withIdentity(ADMIN);
     const id = await t.mutation(api.products.createProduct, productArgs());
