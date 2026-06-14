@@ -40,8 +40,11 @@ yarn-error.log*
 .env*
 !.env.example
 
-# convex generated code
-convex/_generated/
+# Convex generated code is committed so CI (type-check/test/build) resolves the
+# generated API/dataModel types without a deploy key. Regenerate with
+# `npx convex codegen` after changing the schema or function signatures.
+# The ai/ subdir is local AI-tooling cruft, not app code.
+convex/_generated/ai/
 
 # clerk CLI / skills tooling (not app code)
 .agents/
