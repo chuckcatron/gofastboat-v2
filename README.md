@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GoFastBoat.com
+
+Rebuild of [gofastboat.com](https://gofastboat.com) — a Florida used go-fast / performance boat dealer.
+Built with [Next.js](https://nextjs.org) (App Router) + [Convex](https://convex.dev) + [Clerk](https://clerk.com),
+deployed to Vercel (web) and Convex (backend).
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies and run the dev server alongside Convex:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npx convex dev      # in one terminal — starts the Convex dev deployment
+npm run dev         # in another — Next.js dev server
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Copy `.env.example` to `.env.local` and fill in the values (see **Environment Variables** below).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment Variables
 
-## Learn More
+### Vercel / Next.js (`.env.local` locally, Vercel project env in prod)
 
-To learn more about Next.js, take a look at the following resources:
+| Variable | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_CONVEX_URL` | Convex deployment URL (`*.convex.cloud`) |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key |
+| `CLERK_SECRET_KEY` | Clerk secret key |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Convex (set with `npx convex env set`, **not** in Vercel)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Variable | Purpose |
+| --- | --- |
+| `CLERK_JWT_ISSUER_DOMAIN` | Clerk issuer domain — required by `convex/auth.config.ts` for JWT validation |
+| `ADMIN_EMAILS` | Optional, comma-separated allowlist consumed by `convex/lib/auth.ts` `requireAdmin`. When unset, any authenticated Clerk identity is treated as admin. |
 
-## Deploy on Vercel
+## Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run dev            # Next.js dev server
+npm run build          # production build
+npm run type-check     # tsc --noEmit
+npm run lint           # eslint
+npm run test           # vitest (watch)
+npm run test:coverage  # vitest single run + v8 coverage
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment
+
+### Backend (Convex)
+
+The backend deploys separately from the web app:
+
+```bash
+npx convex deploy      # deploys functions + schema to the Convex prod deployment
+```
+
+After provisioning the prod deployment, set its env vars:
+
+```bash
+npx convex env set CLERK_JWT_ISSUER_DOMAIN https://witty-monarch-16.clerk.accounts.dev
+npx convex env set ADMIN_EMAILS you@example.com   # optional
+```
+
+`convex/_generated/` is committed, so CI builds without running codegen. Regenerate and
+commit it (`npx convex codegen`) after changing the schema or function signatures.
+
+### Web (Vercel)
+
+1. Import the GitHub repo (`chuckcatron/gofastboat-v2`) as a Vercel project.
+2. Set the three Vercel env vars from the table above (point `NEXT_PUBLIC_CONVEX_URL` at the **prod** Convex deployment).
+3. Push to a branch / open a PR → Vercel builds a **preview deployment** reachable over HTTPS on a `*.vercel.app` URL.
+4. Merges to `master` deploy to production.
+
+`next.config.ts` allows `*.convex.cloud` via `images.remotePatterns` so `next/image` can render
+photos served from Convex storage.
+
+> **Manual / owner steps** (not automated, done once): creating the Vercel project, provisioning the
+> Convex prod deployment, entering env vars/secrets in both dashboards, and verifying the first
+> `*.vercel.app` preview. DNS / custom-domain cutover is tracked separately (AB#1253).
+
+## Tech Stack
+
+- Next.js 16 (App Router, React 19)
+- Convex (database, queries/mutations, file storage)
+- Clerk (admin auth; `/admin` is protected via `proxy.ts`)
+- Tailwind CSS v4
+- Vitest + Testing Library
